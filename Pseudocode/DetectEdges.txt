@@ -1,0 +1,65 @@
+IMPORT PACKAGE java.util
+
+CLASS: DetectEdges
+
+SUBMODULE: convolution
+IMPORT: kernel (ARRAY[][] OF INTEGER), image (ARRAY[][] OF INTEGER)
+EXPORT: convertedImg (ARRAY[][] OF INTEGER)
+ASSERTION: imports the kernel and the image and then perform a convolution 
+ALGORITHM: 
+    DECLARE row,col,add,value,len as INTEGER
+    row := image(LENGTH OF ROWS)
+    col := image (LENGTH OF COLUMNS)
+    DECLARE len as INTEGER := kernel (LENGTH OF ROWS)
+    DECLARE finalArray as ARRAY[row-len+1][col-len+1] OF INTEGER
+    FOR i := 0 TO LENGTH OF finalArray(rows) CHANGEBY 1
+	FOR j := 0 TO LENGTH OF finalArray(columns) CHANGEBY 1
+	    value := calcValue(i,j,kernel,finalArray)
+	    finalArray[i][j] = value			         
+	END FOR
+    END FOR
+    RETURN finalArray
+    
+SUBMODULE: calcValue
+IMPORT: i (Integer), j (Integer), kernel (ARRAY[][] OF INTEGER), finalArray (ARRAY[][] OF INTEGER)
+EXPORT: value (Integer)
+ASSERTION: performs the convolution operation and returns the final result
+ALGORITHM:
+    DECLARE result as INTEGER := 0
+    FOR n := 0 TO (LENGTH OF kernel-1) CHANGEBY 1
+        FOR (m := 0 TO (LENGTH OF kernel[0] -1) CHANGEBY 1
+            result := result + (finalArray[i+n][j+m]*kernel[n][m])
+        END FOR
+    END FOR
+    RETURN result
+ 
+SUBMODULE: smoothing
+IMPORT: image (ARRAY OF INTEGER),surface (Integer), pixelX (Integer), pixelY(Integer), factor (Real)
+EXPORT: image (ARRAY OF INTEGER)
+ASSERTION: performs smoothing on the wanted pixel then returns the final array to the caller
+ALGORITHM:
+    DECALRE lengthSmooth, total, count, newValue as INTEGER
+    DECLARE average as REAL
+    total := 0
+    count := 0
+    lengthSmooth := CALL PDIMath.floor((surface DIV 2))
+    
+    TRY
+        FOR x := (pixelX-lengthSmooth-1) TO (pixelX+lengthSmooth-2) CHANGEBY 1
+            FOR y := (pixelY-lengthSmooth-1) TO (pixelY+lengthSmooth-2) CHANGEBY 1
+                total := total + image[x][y]
+                count := count + 1
+            END FOR
+        END FOR
+        average := CALL PDIMath.average(total,count)
+        newValue := CALL PDIMath.ceil(average*factor)
+        FOR x := (pixelX-lengthSmooth-1) TO (pixelX+lengthSmooth-2) CHANGEBY 1
+            FOR y := (pixelY-lengthSmooth-1) TO (pixelY+lengthSmooth-2) CHANGEBY 1
+                image[x][y] := newValue
+            END FOR
+        END FOR
+    CATCH (ARRAY INDEX OUT OF BOUNDS EXCEPTION e)
+        CALL UserInterface.displayError("Sorry your chosen smoothing surface has overlapped the image")
+        CALL UserInterface.displayError("Your original image will be written into the array")
+    END TRY
+    RETURN image

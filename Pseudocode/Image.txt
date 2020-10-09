@@ -1,0 +1,118 @@
+CLASS Image
+			 
+CLASS FIELDS: originalImage (ARRAY [] OF INTEGER)
+
+CONSTRUCTORS:
+Default:
+IMPORT: none
+EXPORT: address of new Image object 
+ASSERTION: the default state is a one matrix
+ALGORITHM: 
+	originalImage :=  null
+
+Alternate:
+IMPORT: inImage (ARRAY[] OF INTEGER)
+EXPORT: address of new Image object
+ASSERTION: Creates the object if the import is valid and FAILS otherwise
+ALGORITHM:
+	originalImage := inImage
+	
+Copy:
+IMPORT: inImage (Image)
+EXPORT: address of new Image object 
+ASSERTION: Creates an object with an identical object state as the import
+ALGORITHM:
+	originalImage := CALL inImage.getImage(none)
+	
+MUTATORS:
+SUBMODULE: setImage
+IMPORT: inImage (ARRAY OF INTEGER)
+EXPORT: none
+ASSERTION: sets the originalImage to inImage
+ALGORITHM:
+	originalImage := inImage
+
+ACCESSORS:
+SUBMODULE: getImage
+IMPORT: none
+EXPORT: originalImage
+
+SUBMODULE: equals
+IMPORT: inObj (Object)
+EXPORT: same (BOOLEAN)
+ASSERTION: Two Image are interchangeable if they have the samevalues
+ALGORITHM:
+	DECLARE rowCount, colCount as INTEGER
+	rowCount := LENGTH OF originalImage
+	colCount := LENGTH OF originalImage[0]
+	same := TRUE
+	IF (inObj is an Image) THEN
+	    inImage := (Convert to Image) inObj
+	    IF ((CALL LENGTH of inImage.getImage() = rowCount AND CALL LENGTH of inImage.getImage()[0] = colCount))
+		DECLARE compare as ARRAY[][] OF INTEGER := CALL inImage.getImage()
+		FOR count := 0 TO (rowCount-1) INC BY 1
+		    FOR nextCount := 0 TO (colCount-1) INC BY 1
+			IF (originalImage[count][nextCount] <> compare[count][nextCount]) THEN
+			    same := FALSE
+			    count := rowCount
+			END IF
+		    END FOR
+		END FOR
+	    ELSE
+		same := FALSE
+	    END IF	
+	    RETURN same
+
+SUBMODULE: clone 
+IMPORT: none
+EXPORT: cloneImage (OBJECT)
+ASSERTION: Returns a cloned object of the current object
+ALGORITHM:
+	CONSTRUCT cloneWheel USING COPY INSTRUCTOR WITH THIS OBJECT
+
+SUBMODULE: toString
+IMPORT: value (INTEGER)
+EXPORT: strMsg (String)
+ASSERTION:
+ALGORITHM:
+	DECLARE line. dash, print, word as STRING
+	FOR count := 0 to (LENGTH OF originalImage-1) INC BY 1
+	    line := " | "
+	    FOR next := 0 TO (LENGTH OF originalImage[0]-1) INC BY 1
+		word := (CONVERT TO STRING)(originalImage[count][next]
+		dash := CALL lineOutput(LENGTH OF originalImage[0])
+		line := line + originalImage[count][next] + CALL moreDigits(count,next,originalImage,word)
+	    END FOR
+	    print := print + line + dash
+	END FOR
+ 	RETURN print
+    
+PRIVATE SUBMODULES:
+SUBMODULE: moreDigits
+IMPORT: value (INTEGER)
+EXPORT: spaces (STRING) 
+ASSERTION: the higher the value, the less spaces needed
+ALGORITHM:
+	DECLARE line, spaces as STRING
+	DECLARE len as INTEGER := LENGTH OF word
+	FOR count := 1 to (len - 1) INC BY 1
+	    spaces := spaces + " "
+	END FOR 
+	line := line + spaces + " "
+	RETURN line
+
+SUBMODULE: lineOutput
+IMPORT: len (INTEGER) //Length of resultArray
+EXPORT:	
+ASSERTION:
+ALGORITHM:
+	DECLARE dash as STRING := ""
+	FOR count := 0 TO (len -1) CHANGEBY 1
+	    dash := dash + "-----"
+	END FOR
+	OUTPUT " " + dash
+
+
+	    
+	
+

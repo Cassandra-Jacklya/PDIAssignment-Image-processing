@@ -1,0 +1,214 @@
+CLASS: UserInterface
+
+SUBMODULE: userDisplay
+IMPORT: line (String)
+EXPORT: none
+ASSERTION: displays a message to the user
+ALGORITHM:
+	OUTPUT line
+
+SUBMODULE: xDimension
+IMPORT: none
+EXPORT none
+ASSERTION: prompts the user to enter an integer
+ALGORITHM:
+	CALL promptUser("Please enter in the x-dimension: ")
+
+SUBMODULE: yDimension
+IMPORT: none
+EXPORT: none
+ASSERTION: prompts the user to enter an integer
+ALGORITHM: 
+	CALL promptUser("Please enter in the y-dimension: ")
+
+SUBMODULE: xValue
+IMPORT: none
+EXPORT: pixelX (Integer)
+ASSERTION: prompts the user to input the x-coordinate
+ALGORITHM:
+	CALL promptUser(line)
+	DECLARE pixelX as INTEGER
+	INPUT pixelX := CALL Validation.checkInt()
+	RETURN pixelX
+
+SUBMODULE: yValue
+IMPORT: none
+EXPORT: pixelY (Integer)
+ASSERTION: prompts the user to input the y-coordinate
+ALGORITHM:
+	CALL promptUser(line)
+	DECLARE pixelY as INTEGER
+	INPUT pixelY := CALL Validation.checkInt()
+	RETURN pixelY
+
+SUBMODULE: enterDimension
+IMPORT: i (Integer), j (Integer)
+EXPORT: none
+ASSERTION: outputs the user's input for confirmation
+ALGORITHM:
+	CALL userDisplay("Position [" + (i+1) + "," + (j+1) + "]: " + value)
+
+SUBMODULE: outputImage
+IMPORT: array (ARRAY OF INTEGER)
+EXPORT: none
+ASSERTION: displays the image to the user
+ALGORITHM:
+	DECLARE line as STRING := "|"
+	FOR x := 0 TO (LENGTH OF array-1) INC BY 1
+	    FOR y := 0 TO (LENGTH OF array[0]-1) INC BY 1
+		line := line + CALL moreDigits(array[x][y]) + "|"
+	    END FOR
+	END FOR
+	CALL userDisplay(line)
+
+SUBMODULE: kernelSize
+IMPORT: none
+EXPORT: kernel (Integer)
+ASSERTION: prompts the user to enter the size of the kernel
+ALGORITHM:
+	DECLARE kernel as INTEGER
+	CALL promptUser("Please enter a kernel size: ")
+	INPUT kernel := CALL Validation.checkInt()
+	valid := CALL checkInt(kernel)
+	RETURN kernel
+
+SUBMODULE: surface
+IMPORT: line (String)
+EXPORT: smoothSurface (Integer)
+ASSERTION: prompts the user to enter the smoothing surface and returns the value to the caller
+ALGORITHM:
+	DECALRE smoothSurface as INTEGER
+	CALL promptUser(line)
+	INPUT smoothSurface := CALL Validation.checkInt()
+	RETURN smoothSurface
+
+SUBMODULE: pixel
+IMPORT: line (String)
+EXPORT: smoothPixel (Integer)
+ASSERTION: prompts the user to enter the pixel coordinates for smoothing and returns the value to the caller
+ALGORITHM:
+	DECLARE smoothPixel as INTEGER
+	CALL promptUser(line)
+	INPUT smoothPixel := CALL Validation.checkInt()
+	RETURN smoothPixel
+
+SUBMODULE: factor
+IMPORT: line (String)
+EXPORT: smoothFactor (Real)
+ASSERTION: prompts the user to enter the smoothing factor and returns the value to the caller
+ALGORITHM:
+	DECLARE smoothFactor as REAL
+	CALL promptUser(line)	
+	INPUT smoothFactor := CALL Validation.checkReal()
+	RETURN smoothFactor
+
+SUBMODULE: inputInteger
+IMPORT: prompt (String)
+EXPORT: value (Integer)
+ASSERTION: allows the user to input random values
+ALGORITHM: 
+	DECLARE temp as INTEGER
+	CALL promptUser(prompt)
+	INPUT temp := CALL Validation.checkInt()
+	RETURN temp
+
+COMMENTS: the SUBMODULES (userInput) will always prompt for the user to input data
+
+SUBMODULE: userInput
+IMPORT: prompt (STRING), lower (INTEGER), upper (INTEGER)
+EXPORT: value (INTEGER)
+ASSERTION:
+ALGORITHM:
+	DECLARE valid as BOOLEAN := FALSE
+	DECLARE temp, value as INTEGER
+	DECLARE word as STRING := prompt + " between " + lower + " and " + upper + " inclusive"
+	OUTPUT word
+	DO
+	    INPUT temp := CALL Validation.checkInt()
+	    IF ((temp >= lower AND temp <= upper)) THEN
+	        value := temp
+		valid := TRUE
+	    ELSE
+	        CALL displayError("OUT OF BOUNDARY. Please re-enter: ")
+	    END IF
+	WHILE (valid = FALSE)
+	RETURN value
+
+SUBMODULE: userInput
+IMPORT: prompt (STRING), lower (DOUBLE), upper (DOUBLE)
+EXPORT: value (DOUBLE)
+ASSERTION:
+ALGORITHM:
+	DECLARE temp, value as DOUBLE
+	DECLARE valid as BOOLEAN := FALSE
+	DO
+	    DECLARE word as STRING := prompt + " " + lower + " and " + upper
+	    OUTPUT word
+	    INPUT temp := CALL Validation.checkReal()
+	    IF ((temp >= lower AND temp <= upper)) THEN
+	        value := temp
+	        valid := TRUE
+	    ELSE
+	        CALL displayError("OUT OF BOUNDARY")
+	    END IF
+	WHILE (valid = FALSE)
+	RETURN value
+
+SUBMODULE: userInput
+IMPORT: prompt (STRING), lower (CHAR), upper (CHAR)
+EXPORT: value (CHAR)
+ASSERTION:
+ALGORITHM:
+	DECLARE temp, value, lowerConvert, upperConver as CHARACTER
+	DECLARE word as STRING := prompt + ". Choose " + lower + " or " + upper
+	OUTPUT word
+	INPUT temp
+	lowerConvert := (CONVERT TO UPPERCASE)(lower)
+	upperConvert := (CONVERT TO UPPERCASE)(upper)
+	convert := (CONVERT TO UPPERCASE)(temp)
+	IF ((convert = lowerConvert OR convert = upperConvert)) THEN
+	    value := convert
+	ELSE
+	    CALL displayError("OUT OF BOUNDARY")
+	END IF
+	RETURN value
+
+SUBMODULE: userInput
+IMPORT: prompt (STRING)
+EXPORT: value (STRING)
+ASSERTION:
+ALGORITHM:
+	DECLARE temp, value as STRING
+	CALL promptUser(prompt)
+	INPUT temp
+	value := temp
+	RETURN value
+
+SUBMODULE: displayError
+IMPORT: error (STRING)
+EXPORT: 
+ASSERTION: outputs an error message
+ALGORITHM:
+	OUTPUT error
+
+SUBMODULE: promptUser
+IMPORT: prompt (String)
+EXPORT: none
+ASSERTION : outputs the prompt
+ALGORITHM:
+	OUTPUT prompt
+
+SUBMODULE: moreDigits
+IMPORT: value (Integer)
+EXPORT: line (String)
+ASSERTION: checks if the integer has more than one digit to apply proper spaces between each value in the array
+ALGORITHM:
+	DECLARE line, word as STRING
+	word := (CONVERT TO STRING)(value)
+	IF (LENGTH OF word < 1) THEN
+	    line := line + " " + value + "  "
+	ELSE
+	    line := line + "  " + value + "  "
+	END IF
+	RETURN line
+

@@ -1,0 +1,149 @@
+IMPORT PACKAGE java.util
+
+MAIN
+    DECLARE xDim, yDim, kernel, smoothSurface, kernelSize, imageChoice as INTEGER
+    DECLARE choice, date, pixelX, pixelY as INTEGER
+    DECLARE smoothFactor as REAL
+    DECLARE filename, kernelFile as STRING
+    DECLARE fileFormat, export, display as CHAR
+
+    DECLARE image as Image[]
+    Image[] := new Image[4]
+    filename := ""
+    kernelFile := ""
+    choice := 0
+
+    DO
+        OUTPUT "Choose a number: "
+        OUTPUT "(1) Import an image: "
+        OUTPUT "(2) Import kernel"
+        OUTPUT "(3) Detect lines using convolution"
+        OUTPUT "(4) Smooth an image"
+        OUTPUT "(5) Export to file"
+        OUTPUT "(0) Exit"
+        INPUT choice
+        
+        IF (image[0] IS NULL) THEN
+	    UserInterface.displayError("You have not entered an image yet")
+	    choice := 1
+	END IF
+	CASE OF (choice)
+	    case 1:
+		INPUT imageChoice := CALL MenuClass.importImg()
+		IF (imageChoice = 1) THEN
+		    INPUT fileFormat := CALL MenuClass.optionOneImg()
+		    CASE OF (fileFormat)
+			case 'p' : case 'P':
+			    CALL UserInterface.promptUser("Please enter a filename: ")
+			    INPUT filename
+			    image[0] := CREATES new instance of Image OBJECT(CALLS FileIO.pngFile(filename+".png")
+			case 'c': case 'C':
+			    CALL UserInterface.promptUser("Please enter a filename: ")
+			    INPUT filename
+			    image[0] := CREATES new instance of Image OBJECT(CALLS FileIO.csvFile(filename+".csv")
+		    END CASE
+		ELSE
+		    CALLS UserInterface.xDimension()
+		    INPUT xDim
+		    CALLS UserInterface.yDimension()
+		    INPUT yDim
+		    image[0] := CREATES new instance of Image OBJECT(CALLS MenuClass.optionTwoImg(xDim,yDim))
+		END IF
+
+		INPUT display := CALL UserInterface.userInput("Do you want to print your image?",'Y','N')
+		IF (display = 'Y') THEN
+		    CALL UserInterface.outputImage(image[0].getImage())
+		END IF
+		CALL UserInterface.userDisplay("Your image has been processed and read")
+	
+	    case 2:
+		DO
+		    INPUT kernel := CALL MenuClass.importKernel()
+		    CASE OF (kernel)
+			case 1:
+			    image[1] := CREATES new instance of Image OBJECT(CALL MenuClass.optionOneKernel())
+			case 2:
+			    DO
+				INPUT kernelSize := CALL UserInterface.kernelSize()
+			    WHILE (kernelSize <= 0)
+			    image[1] := CREATES new instance of Image OBJECT(CALL MenuClass.optionTwoKernel(kernelSize))
+		    END CASE
+		WHILE (image[1] IS NULL)
+
+		INPUT display := CALL UserInterface.userInput("Do you want to print your kernel?",'Y','N')
+		IF (display = 'Y') THEN
+		    CALL UserInterface.outputImage(image[1].getImage())
+		END IF
+		CALL UserInterface.userDisplay("Your kernel has been processed and read")
+	    case 3:
+	    IF (image[1] IS NULL) THEN
+	        CALL UserInterface.displayError("You have not entered a kernel file")
+	    ELSE
+	        image[2] := CREATES new instance of Image OBJECT(CALL DetectEdges.convolution(image[1].getImage(),image[0].getImage())
+		INPUT display := CALL UserInterface.userInput("Do you want to print the convoluted image?",'Y','N')
+		IF (display = 'Y') THEN
+		    CALL UserInterface.outputImage(image[2].getImage())
+		END IF
+		CALL UserInterface.userDisplay("Convolution has been done to detect lines or edges of your image")
+	    case 4:
+	        INPUT smoothSurface := CALL UserInterface.surface("Please enter a smoothing surface: ")
+	        CALL UserInterface.promptUser("Enter a pixel to smooth(x,y): ")
+	        INPUT pixelX := CALL UserInterface.xValue("Enter the x-coordinate: ")
+	        INPUT pixelY := CALL UserInterface.yValue("Enter the y-coordinate: ")
+	        INPUT smoothFactor := CALL UserInterface.factor("Please enter a smoothness factor")
+	        image[3] := CREATES a new instance of Image OBJECT(CALL DetectEdges.smoothing(image[0].getImage(),smoothSurface,pixelX,pixelY,smoothFactor))
+	        
+		INPUT display := CALL UserInterface.userInput("Do you want to print the smoothened image?",'Y','N')
+		IF (display = 'Y') THEN
+		    CALL UserInterface.outputImage(image[3].getImage())
+		END IF
+		CALL UserInterface.userDisplay("Your image has been smoothened")
+	    case 5:
+	        DECLARE wordDate as STRING
+	        DECLARE number as INTEGER
+	        OUTPUT "Export image:"
+	        OUTPUT "(1) Convoluted image"
+	        OUTPUT "(2) Smoothen image"
+	        INPUT number := CALL UserInterface.userInput("Pick a number",1,2)
+	        
+	        IF (filename = "") THEN
+	            INPUT filename := CALL UserInterface.userInput("Pleae enter the filename: ")
+	        END IF
+	        CALL UserInterface.promptUser("(P)NG or (C)SV format?")
+	        INPUT export := CALL MenuClass.exportOption(filename,number)
+	        
+	        CALL UserInterface.promptUser("Please enter a date to save with: ")
+	        INPUT date
+	        INPUT wordDate := CALL MenuClass.getDate(date)
+	        
+	        DO
+	            CASE OF (number)
+	                case 1:
+	                IF (image[2] IS NULL) THEN
+	                    CALL UserInterface.displayError("There is no convoluted image")
+	                ELSE
+	                    IF ((export = 'p') OR (export = 'P')) THEN
+	                        CALL FileIO.writePNG(wordDate + "_Processed_" + filename, image[2].getImage())
+	                    ELSE
+	                        CALL FileIO.writeCSV(wordDate + "_Processed_" + filename, image[2].getImage())
+	                    END IF
+	                END IF
+	                case 2:
+	                IF (image[3] IS NULL) THEN
+	                    CALL UserInterface.displayError("There is not smoothened image")
+	                ELSE
+	                    IF ((export = 'p') OR (export = 'P')) THEN
+	                        CALL FileIO.writePNG(wordDate + "_Processed_" + filename, image[3].getImage())
+	                    ELSE
+	                        CALL FileIO.writeCSV(wordDate + "_Processed_" + filename, image[3].getImage())
+	                    END IF
+	                END IF
+	            END CASE
+	        WHILE ((number <> 1 AND number <> 2))
+	        
+	        CALL UserInterface.userDisplay("File (" + wordDate + "_Processed_" + filename + ".png)")
+	    case 0:
+	        CALL UserInterface.userDisplay("Thank you for participating. Goodbye!")
+	END CASE
+    WHILE (choice <> 0)
+END MAIN

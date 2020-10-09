@@ -1,0 +1,186 @@
+IMPORT PACKAGE java.util
+
+CLASS: MenuClass
+
+SUBMODULE: importImg
+IMPORT: none
+EXPORT: image (Integer)
+ASSERTION: provides further sub-menus to let the user choose to use an existing image or create a new image
+ALGORITHM:	
+	DECLARE valid as BOOLEAN := FALSE
+	DECLARE image as INTEGER
+	DO
+	    OUTPUT "Import an image: "
+	    OUTPUT "(1) Use an existing image"
+	    OUTPUT "(2) Use a new image"
+	    INPUT image := CALL Validation.checkInt()
+	    IF ((image = 1 OR image = 2)) THEN
+	        valid := TRUE
+	    END IF
+	WHILE (valid = FALSE)
+	RETURN image
+
+SUBMODULE: optionOneImg
+IMPORT: none
+EXPORT: fileFormat (Character)
+ASSERTION: lets the user to choose a PNG or CSV format
+ALGORITHM: 
+	DECLARE fileFormat as CHARACTER
+	DECLARE valid as BOOLEAN := FALSE
+	DO
+	    INPUT fileFormat := CALL UserInterface.userInput("(P)NG or (C)SV file format?,'P','C')
+	    IF (CALL Validation.Character(fileFormat)) THEN
+	        valid := TRUE
+	    END IF    
+	WHILE ((fileFormat <> 'p' AND fileFormat <> 'P' AND fileFormat <> 'c' AND fileFormat <> 'C') AND (valid = FALSE))
+	RETURN fileFormat
+
+SUBMODULE: optionTwoImg
+IMPORT: xDim(Integer), yDim(Integer)
+EXPORT: arrayImage(ARRAY OF INTEGER)
+ASSERTION: this sub-menu lets the user create their own image
+ALGORITHM:
+	DECLARE arrayVal as INTEGER
+	DECLARE arrayImage as new ARRAY OF INTEGER[xDim][yDIm]
+	
+	FOR i := 0 TO (xDim-1) INC BY 1
+	     FOR j := 0 TO (yDim-1) INC BY 1
+	         arrayVal := CALL UserInterface.userInput("Please enter an integer",0,255)
+	         CALL UserInterface.enterDimension(i,j,arrayVal)
+	         arrayImage[i][j] := arrayVal
+	     END FOR
+	 END FOR
+	 RETURN arrayImage
+	
+SUBMODULE: importKernel
+IMPORT: none
+EXPORT: kernel (Integer)
+ASSERTION: this sub-menu enables the user to choose an existing kernel or create a new kernel
+ALGORITHM:
+	DECLARE kernel as INTEGER
+	DECLARE valid as BOOLEAN := FALSE
+	DO
+	    OUTPUT "Import a kernel: "
+	    OUTPUT "(1) Use an existing kernel"
+	    OUTPUT "(2) Use a new kernel"
+	    INPUT kernel := CALL Validation.checkInt()
+	    IF (kernel = 1 OR kernel =2) THEN
+	        valid := TRUE
+	    END IF
+	WHILE (valid = FALSE)
+	RETURN kernel
+	
+SUBMODULE: optionOneKernel
+IMPORT: none
+EXPORT: arrayKernel (ARRAY OF INTEGER)
+ASSERTION: this option allows the user to use an existing kernel file
+ALGORITHM:
+	DECLARE arrayKernel as ARRAY OF INTEGER[][]
+	DECLARE kernelFile as STRING
+	DO
+	    INPUT kernelFile := CALL UserInterface.userInput("Please enter a filename: ")
+	    arrayKernel := CALL FileIO.csvFile(kernelFile+".csv")
+	WHILE (kernelFile IS NULL)
+	RETURN arrayKernel
+	
+SUBMODULE: optionTwoKernel
+IMPORT kernel (Integer
+EXPORT: arrayKernel (ARRAY OF INTEGER)
+ASSERTION: this option allows the user to create their own kernel
+ALGORITHM:
+	DECLARE arrayKernel as new ARRAY OF INTEGER[kernel][kernel]
+	DECLARE kernelVal as INTEGER
+	FOR x := 0 TO (kernel-1) INC BY 1
+	    FOR y := 0 TO (kernel-1) INC BY 1
+	        kernelVal := CALL UserInterface.inputInteger("Please enter an integer")
+	        CALL UserInterface.enterDimension(x,y,kernelVal)
+	        arrayKernel[x][y] := kernelVal
+	    END FOR
+	END FOR
+	RETURN arrayKernel
+
+SUBMODULE: exportOption
+IMPORT: filename (String), number (Integer)
+EXPORT: export (Character)
+ASSERTION: lets the user choose to export to a PNG or CSV file
+ALGORITHM:
+	DECLARE export as CHARACTER
+	DECLARE valid as BOOLEAN := FALSE
+	INPUT export
+	DO 
+	    INPUT export 
+	    IF (CALL Validation.Character(export)) THEN
+	        CASE OF (export)
+	            case 'p': case 'P':
+	                IF (filename IS NULL) THEN
+	                    INPUT filename := CALL UserInterface.userInput("Please enter the filename: ")
+	                END IF
+	                valid := TRUE
+	            case 'c': case 'C':
+	                IF (filename IS NULL) THEN
+	                    INPUT filename := CALL UserInterface.userInput("Please enter the filename: ")
+	                END IF
+	                valid := TRUE
+	    END CASE
+	WHILE (valid = FALSE)
+	RETURN export
+	
+SUBMODULE: getDate
+IMPORT: userDate (Integer)
+EXPORT: date (String)
+ASSERTION: splits the DDMMYYYY format into a string e.g. 2020-05-05
+ALGORITHM:
+	DECLARE word, finalWord as STRING
+	DECLARE len, month, day, year as INTEGER
+	DECLARE validate = FALSE
+	DECLARE data as Date := new Date[1]
+
+	DO
+	    word := STRING (userDate)
+	    len := LENGTH (word)
+	    IF ((len = 7)) OR (len = 8)) THEN
+	        year := CALL splitYear(userDate)
+		month := CALL splitMonth(userDate)
+		day := CALL splitDay(userDate)
+		
+		date[0] := new Date(day,month,year)
+		finalWord := date[0].toString
+		validate := TRUE
+	     ELSE
+	         CALL UserInterface.displayError("Invalid date. Enter again: ")
+	         INPUT userDate
+	     END IF	
+	WHILE (validate = FALSE)
+	RETURN finalWord
+
+SUBMODULE: splitYear
+IMPORT: userDate (Integer)
+EXPORT: year (Integer)
+ASSERTION: gets the year part of the string
+ALGORITHM:
+	DECLARE year, split as INTEGER
+	split := userDate
+	year := split MOD 10000
+	RETURN year
+
+SUBMODULE: splitMonth
+IMPORT: userDate (Integer)
+EXPORT: month (Integer)
+ASSERTION: gets the month part of the string
+ALGORITHM:
+	DECLARE month, split as INTEGER
+	split := userDate
+	split := split DIV 10000
+	month := split MOD 100
+	RETURN month
+
+SUBMODULE: splitDay(userDate)
+IMPORT: userDate (INTEGER)
+EXPORT: day (INTEGER)
+ASSERTION: gets the day part of the string
+ALGORITHM:
+	DECLARE day, split as INTEGER
+	split := userDate
+	split := split DIV 1000000
+	day := split MOD 100
+	RETURN day

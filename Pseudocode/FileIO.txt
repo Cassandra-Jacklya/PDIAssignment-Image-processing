@@ -1,0 +1,173 @@
+IMPORT PACKAGE: java.util
+IMPORT PACKAGE: java.io
+IMPORT PACKAGE: java.awt
+IMPORT PACKAGE: java.awt.image
+IMPORT PACKAGE: javax.imageio
+
+CLASS: FileIO
+
+SUBMODULE: csvFile
+IMPORT: fileName (String)
+EXPORT: array (ARRAY OF INTEGER)
+ASSERTION: reads the file and returns the file in an array format
+ALGORITHM:
+    DECLARE valid as BOOLEAN 
+    DECLARE word as STRING := ""
+    FILEINPUTSTREAM fileStream := NULL
+    INPUTSTREAMREADER reader
+    BUFFEREDREADER buffer
+    DECLARE array[][] as ARRAY OF INTEGER
+    DECLARE line as STRING
+    TRY
+        DECLARE j as INTEGER := 0
+    	DECLARE value as INTEGER := 0
+    	file := OPENFILE fileName
+    	INPUT line FROM file
+        word := CALL processLine(line)
+        DECLARE store[] as ARRAY OF STRING
+	DECLARE len as INTEGER := LENGTH of store
+	array := new ARRAY OF INTEGER[len][len]
+    	WHILE NOT (file = EOF) 
+    		IF (LENGTH OF LINE = 0) THEN
+    		    INPUT line FROM file
+    		ELSE
+    		    word = processLine(line)
+    		    store := SPLIT word USING DELIMITER " "
+		    len := LENGTH of store
+    		    FOR x := j TO LENGTH of store CHANGEBY 1
+    		    	FOR y := 0 TO LENGTH of store CHANGEBY 1
+    		    		value := (CONVERT TO INTEGER)(store[y])
+    		    		array[x][y] := value
+    		    	END FOR
+    		    END FOR
+		    j := j + 1
+    		END IF
+    		INPUT line FROM file
+    		CLOSEFILE file
+    	ENDWHILE
+    CATCH(IO EXCEPTION)
+    	IF (fileStream is NOT NULL) THEN
+    		TRY
+   			CLOSEFILE file
+   		CATCH (IO EXCEPTION)
+   			OUTPUT "Error: File not found or file data is invalid"
+   		END TRY
+   	END IF
+    CATCH (INPUT MISMATCH EXCEPTION err)
+    	CALL UserInterface.displayError("File in data is not an integer")
+    END TRY
+    RETURN array
+ 
+SUBMODULE: writeCSV
+IMPORT: fileName (String), writeArray (ARRAY OF INTEGER)
+EXPORT: none
+ASSERTION: Writes a 2D array to a file if import is valid
+ALGORITHM:
+    DECLARE word, change as STRING
+    DECLARE line as INTEGER
+    file := OPENFILE fileName
+    PRINTWRITER print
+    IF (IMPORT is INVALID) THEN
+    	THROW input mismatch exception
+    ELSE
+    	FOR count := 0 TO LENGTH OF writeArray
+	    change := ""
+    	    FOR next := 0 TO LENGTH[0] OF writeArray
+		line := writeArray[count][next]
+		change := change + (CONVERT TO STRING)(line) + " "
+    	    END FOR
+	    word := CALL toFileString(change)
+	    print word INTO file
+    	END FOR
+	CLOSE PRINTWRITER
+    END IF
+
+SUBMODULE: pngFile 
+IMPORT: fileName (String)
+EXPORT: pngFile (ARRAY OF INTEGER)
+ASSERTION: Attempts to open a .png file and construct a 2D array into it and returns 
+ALGORITHM:
+    FILE inputFile
+    BUFFEREDIMAGE buffer
+    DECLARE image as ARRAY[][] OF INTEGER
+    DECLARE image as Image := new Image[1]
+    IF (NO IO INTERRUPTION) THEN
+        inputFile := NEW FILE(fileName)
+        buffer := (CONVERT TO IMAGE) inputFile
+        image := new ARRAY OF INTEGER [HEIGHT][WIDTH]
+        FOR y:= 0 TO HEIGHT OF image CHANGEBY 1
+    	    FOR x := 0 TO WIDTH OF image CHANGEBY 1
+    	        COLOR pixel := NEW COLOR(getRGB(x,y), TRUE)
+    	        image[x][y] := (CONVERT TO INTEGER)((pixel.getRed() * 0.299) + (pixel.getBlue() * 0.114) + (pixel.getGreen() * 0.587))
+    	    END FOR
+        END FOR
+	image[0] := new Image(array)
+   ELSE
+   	THROW invalid IO Exception (e)
+   	CALL UserInterface.displayError("Error with .png reading: " + e.getMessage())
+   ELSE
+        THROW illegal Argument Exception (e2)
+ 	CALL UserInterface.displayError("Invalid arguments entered")
+   END IF
+   return array
+  
+SUBMODULE: writePNG
+IMPORT: fileName (String), writeArray (ARRAY OF INTEGER)
+EXPORT: none
+ASSERTION: writes a 2D array to a .png file
+ALGORITHM:
+    BUFFEREDIMAGE buffer
+    FILE outputFile
+    DECLARE value as INTEGER := 0
+    IF (NO IO INTERRUPTION) THEN
+        outputFile := NEW FILE(fileName)
+        buffer := NEW BUFFEREDIMAGE(HEIGHT of writeArray, WIDTH of writeArray, BUFFEREDIMAGE.TYPE INTEGER RGB)
+        
+        FOR y := 0 TO HEIGHT of writeArray CHANGEBY 1
+            FOR x:= 0 TO WIDTH of writeArray CHANGEBY 1
+                value := CALL PDIMath.abs((writeArray[x][y] MOD 256))
+                COLOR newColor := NEW COLOR(value,value,value)
+                buffer (SET VALUE OF PIXEL)(x,y,newColor.getRGB())
+            END FOR
+        END FOR
+        WRITE image(buffer,"png",outputFile)
+    ELSE
+    	THROW invalid IO Exception (e)
+    	UserInterface.displayError("Error with .png reading: " + e.getMessage())
+    END IF
+
+SUBMODULE: processLine
+IMPORT: line (String)
+EXPORT: word (String)
+ASSERTION: returns the line of the file
+ALGORITHM:
+    word := ""
+    DECLARE splitLine as ARRAY[] OF STRING
+    splitLine := SPLIT line USING DELIMITER (",");
+    FOR count := 0 TO LENGTH OF ARRAY (splitLine)
+    	word := word + splitLine[count] + " "
+    END FOR
+    RETURN word
+
+SUBMODULE: toFileString
+IMPORT: line (String)
+EXPORT: newLine(String)
+ASSERTION: converts the line imported to a file format
+ALGORITHM:
+    DECLARE newLine as STRING 
+    TRY
+        DECLARE splitLine[] as ARRAY OF STRING
+        splitLine := SPLIT line USING DELIMITER " "
+        FOR count := 0 TO (LENGTH OF splitLine-1) INC BY 1
+            IF (count = (LENGTH OF SPLITLINE-1)) THEN		
+	        newLine := newLine + splitLine[count]
+	    ELSE
+	        DECLARE i as INTEGER := (CONVERT TO INTEGER)(splitLine[count])
+	        newLine := newLine + splitLine[count] + ","
+	    END IF
+        END FOR
+    CATCH(INPUT MISMATCH EXCEPTION e)
+        CALL UserInterface.displayError("The array encounters a non-integer")
+    END TRY
+    REUTRN newLine
+

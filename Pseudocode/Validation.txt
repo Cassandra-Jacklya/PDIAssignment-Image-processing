@@ -1,0 +1,56 @@
+IMPORT PACKAGE java.util
+
+CLASS: Validate
+
+SUBMODULE: checkInt
+IMPORT: none
+EXPORT: userInput (Integer)
+ASSERTION: checks whether the entered value is an integer
+ALGORITHM:
+	DECLARE userInput as INTEGER
+	DECLARE validInt as BOOLEAN := FALSE
+	userInput := 0
+	DO
+  	    OUTPUT "Enter an integer: "
+  	    IF (an integer exists in userInput) THEN
+     	        userInput := INPUT userInput
+     	        validInt := TRUE
+  	    ELSE
+     	        OUTPUT "Input is not an integer. Please enter again." 
+  	    ENDIF
+	WHILE (validInt = FALSE)
+	RETURN userInput
+
+SUBMODULE: checkReal
+IMPORT: none
+EXPORT: finalNum (Real)
+ASSERTION: checks whether the entered value is a real number
+ALGORITHM:
+	DECLARE finalNum as REAL
+	DECLARE validNum as BOOLEAN := FALSE
+	finalNum := 0
+	DO
+  	    OUTPUT "Enter a real number: "
+  	    IF (a double value exists in user's input) THEN
+    	        finalNum := INPUT finalNum
+    	        validNum := TRUE
+  	    ELSE
+    	        OUTPUT "Input is not a real number. Please enter again."
+  	    ENDIF
+	WHILE (validNum = FALSE)
+	RETURN finalNum
+
+SUBMODULE: Character 
+IMPORT: a (Character)	
+EXPORT: valid (Boolean)
+ASSERTION: checks whether the imported value is a character
+ALGORITHM:
+	DECLARE valid as BOOLEAN := FALSE
+	DECLARE convert as INTEGER
+	convert := (CONVERT TO INTEGER)(a)
+	IF (((convert >= 65 AND convert <= 90)) OR ((convert >= 97 AND convert <= 122))) THEN
+	    valid := TRUE
+	ELSE
+	    CALL UserInterface.displayError("You have not entered a character. Enter again: ")
+	END IF
+	RETURN valid

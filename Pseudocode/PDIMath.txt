@@ -1,0 +1,246 @@
+CLASS: PDIMath
+
+COMMENT: the SUBMODULES (min) will always return the lesser of the two values
+
+SUBMODULE: min
+IMPORT: a (INTEGER), b (INTEGER)
+EXPORT: value (INTEGER)
+ASSERTION:
+ALGORITHM:
+	IF (a<b) THEN
+	    value := a
+	ELSE
+	    value := b
+	END IF 
+	RETURN value
+
+SUBMODULE: min 
+IMPORT: a (FLOAT), b (FLOAT)
+EXPORT: value (FLOAT)
+ASSERTION: 
+ALGORITHM:
+	TOL (FLOAT) := 0.001f
+	IF ((a-b) < TOL) THEN
+	    value := a
+	ELSE
+	    value := b
+	END IF
+	RETURN value 
+
+SUBMODULE: min 
+IMPORT: a (DOUBLE), b (DOUBLE)
+EXPORT: value (DOUBLE)
+ASSERTION:
+ALGORITHM:
+	TOL (DOUBLE) := 0.000001
+	IF ((a-b) < TOL) THEN
+	    value := a
+	ELSE
+	    value := b
+	END IF
+	RETURN value
+
+SUBMODULE: min
+IMPORT: a (LONG), b (LONG)
+EXPORT: value (LONG)
+ASSERTION:
+ALGORITHM:
+	IF (a<b) THEN
+	    value := a
+	ELSE
+	    value := b
+	END IF
+	RETURN value
+
+COMMENT: the SUBMODULES (max) will always return the greater of the two values   
+
+SUBMODULE: max
+IMPORT: a (INTEGER), b (INTEGER)
+EXPORT: value (INTEGER)
+ASSERTION:
+ALGORITHM:
+	IF (a>b) THEN
+	    value := a
+	ELSE
+	    value := b
+	END IF 
+	RETURN value
+
+SUBMODULE: max
+IMPORT: a (FLOAT), b (FLOAT)
+EXPORT: value (FLOAT)
+ASSERTION: 
+ALGORITHM:
+	TOL (FLOAT) := 0.001f
+	IF ((b-a) < TOL) THEN
+	    value := a
+	ELSE
+	    value := b
+	END IF 
+	RETURN value
+
+SUBMODULE: max 
+IMPORT: a (DOUBLE), b (DOUBLE)
+EXPORT: value (DOUBLE)
+ASSERTION:
+ALGORITHM:
+	TOL (DOUBLE) := 0.000001
+	IF ((b-a) < TOL) THEN
+            value := a
+        ELSE
+            value := b
+        END IF
+        RETURN value
+        
+SUBMODULE: max
+IMPORT: a (LONG), b (LONG)
+EXPORT: value (LONG)
+ASSERTION:
+ALGORITHM:
+	IF (b<a) THEN
+	    value := a
+	ELSE
+	    value := b
+	END IF
+	RETURN value
+
+COMMENT: the SUBMODULES (abs) will always return the absolute value of the input
+
+SUBMODULE: abs
+IMPORT: a (INTEGER)
+EXPORT: value (INTEGER)
+ASSERTION:
+ALGORITHM:
+	value := a
+	IF (a<0) THEN
+	    value := a*(-1)
+	END IF
+	RETURN value
+
+SUBMODULE: abs 
+IMPORT: a (FLOAT)
+EXPORT: value (FLOAT)
+ASSERTION: 
+ALGORITHM:
+	value := a
+	IF (a<0.0f) THEN
+	    value := a*(-1.0f)
+	END IF 
+	RETURN value
+	
+SUBMODULE: abs
+IMPORT: a (DOUBLE)
+EXPORT: value (DOUBLE)
+ASSERTION:
+ALGORITHM:
+	value := a
+	IF (a<0.0) THEN
+	    value := a*(-1.0)
+	END IF
+	RETURN value
+	
+SUBMODULE: abs
+IMPORT: a (LONG)
+EXPORT: value (LONG)
+ASSERTION:
+ALGORITHM:
+	value := a
+	IF (a<0) THEN
+	    value := a*(-1L)
+	END IF
+	RETURN value
+
+SUBMODULE: floor
+IMPORT: a (DOUBLE)
+EXPORT: value (INTEGER)
+ASSERTION: return the value that has been rounded to the lesser whole value (e.g. 1.9 will return 1)
+ALGORITHM:
+	value := (a/1.0) (CONVERT TO INTEGER)
+	RETURN value
+
+SUBMODULE: ceil
+IMPORT: a (DOUBLE)
+EXPORT: value (INTEGER)
+ASSERTION: return the value that has been rounded to the greater whole value (e.g. 1.9 will return 1)
+ALGORITHM:
+	IF ((a MOD 1.0) = 0) THEN 
+	    value := (floor <- (a)) + 1
+	ELSE 
+	    value := (floor <- (a))
+	END IF
+	RETURN value
+	
+SUBMODULE: pow
+IMPORT: base (DOUBLE), exponent (DOUBLE)
+EXPORT: value (DOUBLE)
+ASSERTION: return the value of the first argument raised to the power of the second argument
+ALGORITHM:
+	value := 1.0
+	FOR count := 1 TO exponent CHANGEBY 1
+	    value := value*base
+	END FOR
+	RETURN value
+	
+SUBMODULE: pi
+IMPORT: precision (INTEGER)
+EXPORT: value (DOUBLE)
+ASSERTION: take in a precision and calculate pi to its precision
+ALGORITHM:
+	DECLARE add as DOUBLE := 0.0
+	IF (validPrecision <- precision) THEN
+	    FOR count := 1 TO 100 CHANGEBY 1
+      		add := add + (piElements <- count)
+      	    END FOR
+      	ELSE
+      	    THROW invalid argument exception
+      	END IF
+        value := calcPrecision <- (add, precision)
+        RETURN value
+
+SUBMODULE: e
+IMPORT: precision (INTEGER)
+EXPORT: value (DOUBLE)
+ASSERTION: take in a precision and calculate e to its precision
+ALGORITHM:
+	DECLARE add as DOUBLE := 0.0
+	IF (validPrecision <- precision) THEN
+	    FOR count := 1 TO 100 CHANGEBY 1
+	    	add := add + (eElements <- count)
+	    END FOR
+	ELSE
+	    THROW invalid argument exception
+	END IF
+	value := calcPrecision <- (add, precision)
+	RETURN value
+
+SUBMODULE: factorial (count)
+IMPORT: count(INTEGER)
+EXPORT: multiply (INTEGER)
+ASSERTION: calculates its respective factorial
+ALGORITHM:
+	DECLARE multiply as INTEGER := 1
+	DO
+  	    multiply := multiply*count
+  	    count := count - 1
+	WHILE (count <> 0)
+	RETURN multiply		
+	
+SUBMODULE: calcPrecision
+IMPORT: value (DOUBLE), precision (INTEGER)
+EXPORT: calculated (DOUBLE)
+ASSERTION: returns the value according to user's precision value
+ALGORITHM:
+	DECLARE power, calculated, truncate, answer as REAL
+	power := CALL pow(10,precision)
+	answer := value*power
+	truncate := CALL floor(answer)
+	calculated := truncate DIV power
+	RETURN calculated
+
+SUBMODULE: validPrecision
+IMPORT: precision (INTEGER)
+EXPORT: valid (BOOLEAN)
+ASSERTION: precision is valid if it is more than 0
+ALGORITHM:	
+	valid := precision>0
+
